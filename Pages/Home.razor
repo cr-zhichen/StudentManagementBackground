@@ -1,0 +1,149 @@
+﻿@inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorageService
+@inject ISyncLocalStorageService SyncLocalStorageService
+@page "/home"
+
+<PageTitle>个人信息</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">个人信息</MudText>
+<MudText Class="mb-8">下面是您的个人信息</MudText>
+
+<MudGrid>
+    <MudItem xs="3">
+        <MudCard>
+            <MudCardContent>
+                <MudText>学号</MudText>
+                <MudText Typo="Typo.body2">@GetId()</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="3">
+        <MudCard>
+            <MudCardContent>
+                <MudText>姓名</MudText>
+                <MudText Typo="Typo.body2">@GetName()</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="3">
+        <MudCard>
+            <MudCardContent>
+                <MudText>性别</MudText>
+                <MudText Typo="Typo.body2">@GetSex()</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="3">
+        <MudCard>
+            <MudCardContent>
+                <MudText>年龄</MudText>
+                <MudText Typo="Typo.body2">@GetAge()</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="3">
+        <MudCard>
+            <MudCardContent>
+                <MudText>专业</MudText>
+                <MudText Typo="Typo.body2">@GetMajor()</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="3">
+        <MudCard>
+            <MudCardContent>
+                <MudText>班级</MudText>
+                <MudText Typo="Typo.body2">@GetClassNum()</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudDivider Class="mt-8"/>
+
+<MudText Typo="Typo.h3" GutterBottom="true" Class="mt-8">奖惩信息</MudText>
+<MudText Class="mb-8">下面是您的奖惩信息</MudText>
+
+<MudGrid>
+    @for (int i = 0; i < new Random().Next(5, 20); i++)
+    {
+        bool isReward = new Random().Next(0, 2) == 0;
+        string title = isReward ? "奖励" : "惩罚";
+        string color = isReward ? "background: ivory" : "background: lavender";
+        <MudItem xs="6">
+            <MudCard Class="mt-8" Style="@color">
+                <MudCardMedia Image="https://api.ixiaowai.cn/gqapi/gqapi.php" Height="200"/>
+                <MudCardContent>
+                    <MudText Typo="Typo.h5">@title</MudText>
+                    <MudText Typo="Typo.body2">这是一段对 @title 的描述文字</MudText>
+                    <MudText Typo="Typo.body2">第二行懒得写了</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary">分享</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary">查看具体</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>
+
+@code
+{
+    private int Index = -1; //default value cannot be 0 -> first selectedindex is 0.
+    private string[] XAxisLabels;
+    private List<ChartSeries> Series = new List<ChartSeries>();
+
+    private double[] data;
+    private string[] labels = new[] { "优秀", "良好", "中等", "及格", "不及格" };
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (SyncLocalStorageService.GetItem<bool>("isLogin") == false)
+        {
+            NavigationManager.NavigateTo("/", true);
+        }
+        else
+        {
+        }
+    }
+
+    #region 获取个人信息
+
+    string GetId()
+    {
+        return SyncLocalStorageService.GetItem<DbStudentInfo>("studentInfo").studentId;
+    }
+
+    string GetName()
+    {
+        return SyncLocalStorageService.GetItem<DbStudentInfo>("studentInfo").name;
+    }
+
+    string GetSex()
+    {
+        return SyncLocalStorageService.GetItem<DbStudentInfo>("studentInfo").sex;
+    }
+
+    string GetAge()
+    {
+        return SyncLocalStorageService.GetItem<DbStudentInfo>("studentInfo").age.ToString();
+    }
+
+    string GetMajor()
+    {
+        return SyncLocalStorageService.GetItem<DbStudentInfo>("studentInfo").major;
+    }
+
+    string GetClassNum()
+    {
+        return SyncLocalStorageService.GetItem<DbStudentInfo>("studentInfo").classNum;
+    }
+
+    #endregion
+}

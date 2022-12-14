@@ -1,0 +1,82 @@
+﻿@page "/courseSelection"
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorageService
+@inject ISyncLocalStorageService SyncLocalStorageService
+<PageTitle>选课</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">选课</MudText>
+<MudText Class="mb-8">将想选择的课程拖动到右侧即可完成选课</MudText>
+
+<MudDropContainer T="DropItem" Items="_items" ItemsSelector="@((item, dropzone) => item.Identifier == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
+    <ChildContent>
+        <MudDropZone T="DropItem" Identifier="未选课程" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
+            <MudText Typo="Typo.h6" Class="mb-4">未选课程</MudText>
+        </MudDropZone>
+        <MudDropZone T="DropItem" Identifier="已选课程" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
+            <MudText Typo="Typo.h6" Class="mb-4">已选课程</MudText>
+        </MudDropZone>
+    </ChildContent>
+    <ItemRenderer>
+        <MudPaper Elevation="25" Class="pa-4 my-4">@context.Name</MudPaper>
+    </ItemRenderer>
+</MudDropContainer>
+
+@code {
+
+    private void ItemUpdated(MudItemDropInfo<DropItem> dropItem)
+    {
+        dropItem.Item.Identifier = dropItem.DropzoneIdentifier;
+    }
+
+    private List<DropItem> _items = new();
+    // {
+    //     new DropItem(){ Name = "Drag me!", Identifier = "Drop Zone 1" },
+    //     new DropItem(){ Name = "Or me!", Identifier = "Drop Zone 2" },
+    //     new DropItem(){ Name = "Just Mud", Identifier = "Drop Zone 1" },
+    // };
+
+    protected override void OnInitialized()
+    {
+        if (SyncLocalStorageService.GetItem<bool>("isLogin") == false)
+        {
+            NavigationManager.NavigateTo("/", true);
+        }
+        else
+        {
+            SyncLocalStorageService.GetItem<List<DbCourseInfo>>("courseInfo").ForEach(o =>
+            {
+                SyncLocalStorageService.GetItem<List<DbScoreInfo>>("scoreInfo").ForEach(p =>
+                {
+                    if (o.courseid == p.courseid)
+                    {
+                        _items.Add(new DropItem() { Name = o.courseName, Identifier = "已选课程" });
+                    }
+                });
+            });
+            SyncLocalStorageService.GetItem<List<DbCourseInfo>>("courseInfo").ForEach(o =>
+            {
+                int c = _items.Count;
+                bool flag = false;
+                for (int i = 0; i < c; i++)
+                {
+                    if (o.courseName == _items[i].Name)
+                    {
+                        flag = true;
+                        break;
+                    }
+                }
+                if (!flag)
+                {
+                    _items.Add(new DropItem() { Name = o.courseName, Identifier = "未选课程" });
+                }
+            });
+        }
+    }
+
+    public class DropItem
+    {
+        public string Name { get; init; }
+        public string Identifier { get; set; }
+    }
+
+}

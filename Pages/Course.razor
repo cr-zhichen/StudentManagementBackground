@@ -1,0 +1,61 @@
+﻿@page "/course"
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorageService
+@inject ISyncLocalStorageService SyncLocalStorageService
+<PageTitle>课程信息</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">课程信息</MudText>
+<MudText Class="mb-8">下方为您已选课程的详细信息</MudText>
+
+<MudSimpleTable Style="overflow-x: auto;" Striped="true">
+    <thead>
+    <tr>
+        @foreach (var h in headings)
+        {
+            <th>@h</th>
+        }
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var row in rows)
+    {
+        <tr>
+            @foreach (var x in row.Split())
+            {
+                <td>@x</td>
+            }
+        </tr>
+    }
+    </tbody>
+</MudSimpleTable>
+
+@code {
+    string[] headings = { "id", "课程号", "课程名", "授课老师", "学分" };
+    string[] rows;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (SyncLocalStorageService.GetItem<bool>("isLogin") == false)
+        {
+            NavigationManager.NavigateTo("/", true);
+        }
+        else
+        {
+            List<string> list = new List<string>();
+            int i = 0;
+            SyncLocalStorageService.GetItem<List<DbScoreInfo>>("scoreInfo").ForEach(o =>
+            {
+                i++;
+                list.Add($"" +
+                         $"{i} " +
+                         $"{SyncLocalStorageService.GetItem<List<DbCourseInfo>>("courseInfo").Where(p => o.courseid == p.courseid).FirstOrDefault().courseid} " +
+                         $"{SyncLocalStorageService.GetItem<List<DbCourseInfo>>("courseInfo").Where(p => o.courseid == p.courseid).FirstOrDefault().courseName} " +
+                         $"{SyncLocalStorageService.GetItem<List<DbCourseInfo>>("courseInfo").Where(p => o.courseid == p.courseid).FirstOrDefault().teacher} " +
+                         $"{SyncLocalStorageService.GetItem<List<DbCourseInfo>>("courseInfo").Where(p => o.courseid == p.courseid).FirstOrDefault().credit}");
+            });
+            rows = list.ToArray();
+        }
+    }
+
+}

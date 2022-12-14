@@ -1,0 +1,15 @@
+@inject NavigationManager NavigationManager
+
+<PageTitle>学生成绩管理系统</PageTitle>
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)"/>
+    </Found>
+    <NotFound>
+        @if (true)
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    </NotFound>
+</Router>

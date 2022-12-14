@@ -1,0 +1,163 @@
+﻿@page "/achievement"
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorageService
+@inject ISyncLocalStorageService SyncLocalStorageService
+<PageTitle>成绩信息</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">成绩信息</MudText>
+<MudText Class="mb-8">下方为您具体的成绩信息</MudText>
+
+<MudSimpleTable Style="overflow-x: auto;" Striped="true">
+    <thead>
+    <tr>
+        @foreach (var h in headings)
+        {
+            <th>@h</th>
+        }
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var row in rows)
+    {
+        <tr>
+            @foreach (var x in row.Split())
+            {
+                <td>@x</td>
+            }
+        </tr>
+    }
+    </tbody>
+</MudSimpleTable>
+
+<MudDivider Class="mt-8"/>
+
+<MudText Typo="Typo.h3" GutterBottom="true" Class="mt-8">成绩分布</MudText>
+<MudText Class="mb-8">下面是您的成绩分布</MudText>
+
+<MudGrid>
+    <MudItem xs="6">
+        <MudPaper Class="pa-4">
+            <MudChart
+                ChartType="ChartType.Bar"
+                ChartSeries="@Series"
+                @bind-SelectedIndex="Index"
+                XAxisLabels="@XAxisLabels"
+                Width="100%"
+                Height="300px">
+            </MudChart>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="6">
+        <MudPaper Class="pa-4">
+            <MudChart
+                ChartType="ChartType.Donut"
+                Width="100%"
+                Height="300px"
+                @bind-SelectedIndex="Index"
+                InputData="@data"
+                InputLabels="@labels">
+            </MudChart>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    string[] headings = { "id", "课程号", "课程名", "成绩", "学分", "绩点" };
+    string[] rows;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (SyncLocalStorageService.GetItem<bool>("isLogin") == false)
+        {
+            NavigationManager.NavigateTo("/", true);
+        }
+        else
+        {
+            ReadScoreInfo();
+            GetPassNum();
+            List<string> list = new List<string>();
+            int i = 0;
+            SyncLocalStorageService.GetItem<List<DbScoreInfo>>("scoreInfo").ForEach(o =>
+            {
+                i++;
+                list.Add($"" +
+                         $"{i} " +
+                         $"{o.courseid} " +
+                         $"{SyncLocalStorageService.GetItem<List<DbCourseInfo>>("courseInfo").Where(p => o.courseid == p.courseid).FirstOrDefault().courseName} " +
+                         $"{o.score} " +
+                         $"{SyncLocalStorageService.GetItem<List<DbCourseInfo>>("courseInfo").Where(p => o.courseid == p.courseid).FirstOrDefault().credit} " +
+                         $"{(o.score / 10 - 5).ToString("0.0")}");
+            });
+            rows = list.ToArray();
+        }
+    }
+
+
+    private int Index = -1; //default value cannot be 0 -> first selectedindex is 0.
+    private string[] XAxisLabels;
+    private List<ChartSeries> Series = new List<ChartSeries>();
+
+    private double[] data;
+    private string[] labels = new[] { "优秀", "良好", "中等", "及格", "不及格" };
+    
+    #region 计算及格数量
+
+    void GetPassNum()
+    {
+        Dictionary<string, int> passNum = new Dictionary<string, int>();
+        passNum.Add("优秀", 0);
+        passNum.Add("良好", 0);
+        passNum.Add("中等", 0);
+        passNum.Add("及格", 0);
+        passNum.Add("不及格", 0);
+        SyncLocalStorageService.GetItem<List<DbScoreInfo>>("scoreInfo").ForEach(o =>
+        {
+            if (o.score >= 90)
+            {
+                passNum["优秀"]++;
+            }
+            else if (o.score >= 80)
+            {
+                passNum["良好"]++;
+            }
+            else if (o.score >= 70)
+            {
+                passNum["中等"]++;
+            }
+            else if (o.score >= 60)
+            {
+                passNum["及格"]++;
+            }
+            else
+            {
+                passNum["不及格"]++;
+            }
+        });
+        data = new double[] { passNum["优秀"], passNum["良好"], passNum["中等"], passNum["及格"], passNum["不及格"] };
+    }
+
+    #endregion
+
+    #region 读取成绩信息
+
+    void ReadScoreInfo()
+    {
+        List<string> _XAxisLabels = new List<string>();
+        List<double> Data = new List<double>();
+        SyncLocalStorageService.GetItem<List<DbScoreInfo>>("scoreInfo").ForEach(o =>
+        {
+            _XAxisLabels.Add(SyncLocalStorageService.GetItem<List<DbCourseInfo>>("courseInfo").Where(p => o.courseid == p.courseid).FirstOrDefault().courseName);
+            Data.Add(o.score);
+        });
+        Series.Add(new ChartSeries()
+        {
+            Name = SyncLocalStorageService.GetItem<DbStudentInfo>("studentInfo").name,
+            Data = Data.ToArray()
+        });
+        XAxisLabels = _XAxisLabels.ToArray();
+    }
+
+    #endregion
+}

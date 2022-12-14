@@ -1,0 +1,69 @@
+﻿@inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorageService
+@inject ISyncLocalStorageService SyncLocalStorageService
+
+<PageTitle>学生成绩管理系统</PageTitle>
+
+<MudNavMenu>
+    @if (IsLogin())
+    {
+        <MudNavLink Href="home" Match="NavLinkMatch.All" Icon="@Icons.Filled.AccountCircle">个人信息</MudNavLink>
+        <MudNavLink Href="achievement" Match="NavLinkMatch.All" Icon="@Icons.Filled.Book">成绩信息</MudNavLink>
+        <MudNavLink Href="course" Match="NavLinkMatch.All" Icon="@Icons.Filled.Bookmarks">课程信息</MudNavLink>
+        <MudNavLink Href="courseSelection" Match="NavLinkMatch.All" Icon="@Icons.Filled.BookmarkAdd">选课</MudNavLink>
+        // 退出登录
+        @* <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Login" OnClick="Logout">退出登录</MudNavLink> *@
+    }
+    else
+    {
+        <MudNavLink Href="login" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Login">登录</MudNavLink>
+    }
+</MudNavMenu>
+
+
+<MudTimeline id="A">
+    <MudTimeline>
+        <MudTimelineItem Color="Color.Primary">
+            <MudText>假期</MudText>
+        </MudTimelineItem>
+        <MudTimelineItem>
+            <MudText Align="Align.End">考试周</MudText>
+        </MudTimelineItem>
+        <MudTimelineItem>
+            <MudText>教学周</MudText>
+        </MudTimelineItem>
+        <MudTimelineItem>
+            <MudText Align="Align.End">课程选择</MudText>
+        </MudTimelineItem>
+        <MudTimelineItem>
+            <MudText>入学</MudText>
+        </MudTimelineItem>
+
+    </MudTimeline>
+</MudTimeline>
+
+<style>
+    #A{
+    /*    固定在父物体的底部*/
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+    /*    与左侧的间距为0*/
+        left: 0;
+    }
+</style>
+
+@code
+{
+    bool IsLogin()
+    {
+        if (SyncLocalStorageService.GetItem<bool>("isLogin") == true)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}

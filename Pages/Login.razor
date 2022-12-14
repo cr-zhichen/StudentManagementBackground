@@ -1,0 +1,111 @@
+﻿@page "/login"
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorageService
+@inject ISyncLocalStorageService SyncLocalStorageService
+
+<PageTitle>登录</PageTitle>
+<MudText Typo="Typo.h3" GutterBottom="true">登录</MudText>
+<MudText>欢迎使用学生成绩管理系统~</MudText>
+<MudAlert Severity="Severity.Warning" Class="mt-4">账号为：22208021601,密码为：123456</MudAlert>
+<MudAlert Severity="Severity.Warning" Class="mt-4 mb-8">
+    若刷新后出现出现错误
+    <br Class="mt-4"/>
+    请在Nginx中配置"location / {try_files $uri $uri/ /index.html;}"
+    <br Class="mt-4"/>
+    或者在IIS中配置"RewriteRule ^(.*)$ /index.html"
+    <br Class="mt-4"/>
+    或者在Apache中配置"RewriteEngine on RewriteCond %{REQUEST_FILENAME} !-f RewriteCond %{REQUEST_FILENAME} !-d RewriteRule ^(.*)$ /index.html [L]"
+    <br Class="mt-4"/>
+    或直接在浏览器中输入：http://xxxxxxx/index.html
+
+</MudAlert>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudPaper Class="pa-4">
+            <MudForm >
+                <MudTextField
+                    T="string"
+                    Label="用户名"
+                    Required="true"
+                    RequiredError="请输入用户名"
+                    @bind-Value="username"/>
+                <MudTextField
+                    T="string"
+                    Label="密码"
+                    Required="true"
+                    RequiredError="请输入密码"
+                    Type="InputType.Password"
+                    @bind-Value="password"/>
+            </MudForm>
+            @* 若登录失败 显示下方错误信息 *@
+            @if (isFailed == true)
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">账号或密码错误 请重试</MudAlert>
+            }
+        </MudPaper>
+        <MudPaper Class="pa-4 mt-4">
+            <MudButton
+                Variant="Variant.Filled"
+                Color="Color.Primary"
+                DisableElevation="true"
+                OnClick="@LoginBtn">
+                登录
+            </MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        if (SyncLocalStorageService.GetItem<bool>("isLogin") == true)
+        {
+            NavigationManager.NavigateTo("/home");
+        }
+    }
+
+    bool isFailed = false;
+
+    string username;
+    string password;
+
+    private void LoginBtn()
+    {
+    //页面跳转
+
+        bool b = false;
+
+        LocalData.StudentInfoList.ForEach(o =>
+        {
+            if (username == o.studentId && password == o.password)
+            {
+                b = true;
+
+    //存储个人信息
+                LocalStorageService.SetItemAsync<bool>("isLogin", true);
+                LocalStorageService.SetItemAsync<DbStudentInfo>("studentInfo", o);
+
+    //储存分数信息
+                List<DbScoreInfo> scoreInfoList = new List<DbScoreInfo>();
+                scoreInfoList = LocalData.ScoreInfoList.Where(p => p.studentId == o.studentId).ToList();
+                LocalStorageService.SetItemAsync<List<DbScoreInfo>>("scoreInfo", scoreInfoList);
+
+    //储存课程信息
+                LocalStorageService.SetItemAsync<List<DbCourseInfo>>("courseInfo", LocalData.CourseInfoList);
+
+                NavigationManager.NavigateTo("/", true);
+                return;
+            }
+        });
+        if (b == false)
+        {
+            isFailed = true;
+        }
+    }
+
+
+}
